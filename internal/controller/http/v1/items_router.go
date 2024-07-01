@@ -43,12 +43,16 @@ func (r *itemsAPIRouter) getItemsQuantity(c *gin.Context) {
 	if err != nil {
 		r.l.Error(err, "error converting warehouse_id to int")
 		errorResponse(c, http.StatusBadRequest, "error converting warehouse_id to int")
+
+		return
 	}
 
 	q, err := r.items.Quantity(c.Request.Context(), id)
 	if err != nil {
 		r.l.Error(err, "error getting items quantity")
 		errorResponse(c, http.StatusInternalServerError, "error getting items quantity")
+
+		return
 	}
 
 	successResponse(c, http.StatusOK, q)
@@ -74,6 +78,8 @@ func (r *itemsAPIRouter) createItems(c *gin.Context) {
 	if err := c.BindJSON(&itemsReq); err != nil {
 		r.l.Error(err, "error binding JSON")
 		errorResponse(c, http.StatusBadRequest, "provided data is invalid")
+
+		return
 	}
 
 	if err := r.items.CreateItems(c.Request.Context(), itemsReq.Items); err != nil {

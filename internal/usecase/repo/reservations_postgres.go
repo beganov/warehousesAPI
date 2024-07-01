@@ -32,24 +32,29 @@ func (r *ReservationsRepo) CreateReservation(ctx context.Context, ids []string) 
 		*/
 		var availability bool
 
+		itemCreateStatement := `INSERT INTO items(unique_code) VALUES ($1) ON CONFLICT DO NOTHING`
+
+		_, err = tx.Exec(ctx, itemCreateStatement, id)
+		if err != nil {
+			return fmt.Errorf("error create item. %w", err)
+		}
+
 		checkWarehouseStatement := `SELECT w.is_available FROM items 
    										JOIN warehouses w ON w.id = items.warehouse_id
 										WHERE unique_code = $1`
 		row := tx.QueryRow(ctx, checkWarehouseStatement, id)
 
 		if err := row.Scan(&availability); err != nil {
+			err := tx.Rollback(ctx)
+			if err != nil {
+				return fmt.Errorf("transaction already closed. %w", err)
+			}
+
 			return fmt.Errorf("error checking warehouse availability. %w", err)
 		}
 
 		if !availability {
 			return custom_errors.ErrWarehouseUnavailable
-		}
-
-		itemCreateStatement := `INSERT INTO items(unique_code) VALUES ($1) ON CONFLICT DO NOTHING`
-
-		_, err = tx.Exec(ctx, itemCreateStatement, id)
-		if err != nil {
-			return fmt.Errorf("error create item. %w", err)
 		}
 
 		reservationCreateStatement := `UPDATE items 
