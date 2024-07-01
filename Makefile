@@ -3,7 +3,7 @@ PATH:=$(LOCAL_BIN):$(PATH)
 PG_URL=postgres://user:password@localhost:5432/warehouses_db
 
 up:
-	docker-compose up --build -d && docker-compose logs -f
+	docker compose up --build -d && docker compose logs -f
 .PHONY: compose-up
 
 compose-down: ### Down docker-compose
@@ -20,7 +20,7 @@ run: swag-v1 ### swag run
 .PHONY: run
 
 docker-rm-volume: ### remove docker volume
-	docker volume rm go-clean-template_pg-data
+	docker volume rm warehousesapi_pg-data
 .PHONY: docker-rm-volume
 
 migrate-create:  ### create new migration

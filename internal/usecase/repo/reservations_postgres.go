@@ -36,6 +36,10 @@ func (r *ReservationsRepo) CreateReservation(ctx context.Context, ids []string) 
 
 		_, err = tx.Exec(ctx, itemCreateStatement, id)
 		if err != nil {
+			if err := tx.Rollback(ctx); err != nil {
+				return fmt.Errorf("transaction already closed. %w", err)
+			}
+
 			return fmt.Errorf("error create item. %w", err)
 		}
 
@@ -45,8 +49,7 @@ func (r *ReservationsRepo) CreateReservation(ctx context.Context, ids []string) 
 		row := tx.QueryRow(ctx, checkWarehouseStatement, id)
 
 		if err := row.Scan(&availability); err != nil {
-			err := tx.Rollback(ctx)
-			if err != nil {
+			if err := tx.Rollback(ctx); err != nil {
 				return fmt.Errorf("transaction already closed. %w", err)
 			}
 
@@ -54,6 +57,10 @@ func (r *ReservationsRepo) CreateReservation(ctx context.Context, ids []string) 
 		}
 
 		if !availability {
+			if err := tx.Rollback(ctx); err != nil {
+				return fmt.Errorf("transaction already closed. %w", err)
+			}
+
 			return custom_errors.ErrWarehouseUnavailable
 		}
 
@@ -64,6 +71,10 @@ func (r *ReservationsRepo) CreateReservation(ctx context.Context, ids []string) 
 
 		_, err = tx.Exec(ctx, reservationCreateStatement, count, id)
 		if err != nil {
+			if err := tx.Rollback(ctx); err != nil {
+				return fmt.Errorf("transaction already closed. %w", err)
+			}
+
 			return fmt.Errorf("error executing insert reservation. %w", err)
 		}
 
@@ -71,6 +82,7 @@ func (r *ReservationsRepo) CreateReservation(ctx context.Context, ids []string) 
 			if err := tx.Rollback(ctx); err != nil {
 				return fmt.Errorf("transaction already closed. %w", err)
 			}
+
 			return fmt.Errorf("error commiting transaction. %w", err)
 		}
 	}
@@ -81,23 +93,57 @@ func (r *ReservationsRepo) CreateReservation(ctx context.Context, ids []string) 
 func (r *ReservationsRepo) DeleteReservation(ctx context.Context, ids []string) error {
 	deleteReservations := r.reservedItemsCount(ids)
 
-	tx, err := r.Pool.Begin(ctx)
-	if err != nil {
-		return fmt.Errorf("error begining transaction. %w", err)
-	}
-
 	for id, count := range deleteReservations {
+		tx, err := r.Pool.Begin(ctx)
+		if err != nil {
+			return fmt.Errorf("error begining transaction. %w", err)
+		}
+
 		var reserved int
+		var availability bool
+
+		checkWarehouseStatement := `SELECT w.is_available FROM items 
+   										JOIN warehouses w ON w.id = items.warehouse_id
+										WHERE unique_code = $1`
+		row := tx.QueryRow(ctx, checkWarehouseStatement, id)
+
+		if err := row.Scan(&availability); err != nil {
+			if err := tx.Rollback(ctx); err != nil {
+				return fmt.Errorf("transaction already closed. %w", err)
+			}
+
+			return fmt.Errorf("error checking warehouse availability. %w", err)
+		}
+
+		if !availability {
+			if err := tx.Rollback(ctx); err != nil {
+				return fmt.Errorf("transaction already closed. %w", err)
+			}
+
+			return custom_errors.ErrWarehouseUnavailable
+		}
 
 		reservationsCheck, args, err := r.Builder.Select("reserved").From("items").Where("unique_code = ?", id).ToSql()
 		if err != nil {
+			if err := tx.Rollback(ctx); err != nil {
+				return fmt.Errorf("transaction already closed. %w", err)
+			}
+
 			return fmt.Errorf("error building statement. %w", err)
 		}
 
 		err = tx.QueryRow(ctx, reservationsCheck, args...).Scan(&reserved)
 		if reserved == 0 {
+			if err := tx.Rollback(ctx); err != nil {
+				return fmt.Errorf("transaction already closed. %w", err)
+			}
+
 			return custom_errors.ErrNoReservation
 		} else if err != nil {
+			if err := tx.Rollback(ctx); err != nil {
+				return fmt.Errorf("transaction already closed. %w", err)
+			}
+
 			return fmt.Errorf("error scanning item reservations. %w", err)
 		}
 
@@ -108,17 +154,20 @@ func (r *ReservationsRepo) DeleteReservation(ctx context.Context, ids []string) 
 
 		_, err = tx.Exec(ctx, reservationDeleteStatement, count, id)
 		if err != nil {
-			// todo: кастомная ошибка
+			if err := tx.Rollback(ctx); err != nil {
+				return fmt.Errorf("transaction already closed. %w", err)
+			}
+
 			return fmt.Errorf("error delete reservation. %w", err)
 		}
-	}
 
-	if err := tx.Commit(ctx); err != nil {
-		if err := tx.Rollback(ctx); err != nil {
-			return fmt.Errorf("transaction already closed. %w", err)
+		if err := tx.Commit(ctx); err != nil {
+			if err := tx.Rollback(ctx); err != nil {
+				return fmt.Errorf("transaction already closed. %w", err)
+			}
+
+			return fmt.Errorf("error commiting transaction. %w", err)
 		}
-
-		return fmt.Errorf("error commiting transaction. %w", err)
 	}
 
 	return nil

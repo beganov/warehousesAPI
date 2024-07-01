@@ -43,6 +43,8 @@ func (w *warehousesAPIRoutes) createWarehouse(c *gin.Context) {
 	if err := c.ShouldBindJSON(&wh); err != nil {
 		w.l.Error(err, "error binding JSON")
 		errorResponse(c, http.StatusBadRequest, "provided data is invalid")
+
+		return
 	}
 
 	if err := w.warehouses.WarehouseCreate(c.Request.Context(), wh.Warehouse); err != nil {

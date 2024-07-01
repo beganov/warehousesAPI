@@ -21,11 +21,19 @@ func (r *WarehousesRepo) CreateWarehouse(ctx context.Context, warehouse entity.W
 		Columns("name", "is_available").
 		Values(warehouse.Name, warehouse.Availability).ToSql()
 	if err != nil {
+		if err := tx.Rollback(ctx); err != nil {
+			return fmt.Errorf("transaction already closed. %w", err)
+		}
+
 		return fmt.Errorf("error creating statement. %w", err)
 	}
 
 	_, err = tx.Exec(ctx, stmt, args...)
 	if err != nil {
+		if err := tx.Rollback(ctx); err != nil {
+			return fmt.Errorf("transaction already closed. %w", err)
+		}
+
 		return fmt.Errorf("error creating warehouse. %w", err)
 	}
 

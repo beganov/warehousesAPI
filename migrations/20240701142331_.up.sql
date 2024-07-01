@@ -26,4 +26,7 @@ VALUES ('A0001', 'TestItem1', 'S', 10, 1),
        ('D0004', 'TestAnotherItem1', 'test_size2', 1, 4),
        ('E0001', 'TestUnavailableItem', 'test_size1', 5, 5),
        ('E0004', 'TestUnavailableItem', 'test_size2', 1, 5),
-       ('F0001', 'TestUnavailableItem2', 'test_sizeS', 1, 6)
+       ('F0001', 'TestUnavailableItem2', 'test_sizeS', 1, 6);
+
+ALTER SEQUENCE warehouses_id_seq START WITH 7;
+ALTER SEQUENCE warehouses_id_seq RESTART;

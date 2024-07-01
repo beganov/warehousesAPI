@@ -34,7 +34,7 @@ func newItemsAPIRoutes(handler *gin.RouterGroup, i usecase.ItemsUseCase, l logge
 // @Accept      json
 // @Produce     json
 // @Param 		warehouse_id	path 		int			true 	"warehouse_id"
-// @Success     201 			{object} 	response
+// @Success     200 			{object} 	response
 // @Failure		400				{object}	response
 // @Failure     500 			{object} 	response
 // @Router      /items/{warehouse_id}/quantity 			[get]

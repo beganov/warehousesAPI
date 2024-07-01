@@ -31,6 +31,11 @@ func (r *ItemsRepo) StoreItems(ctx context.Context, items []entity.Item) error {
 								WHERE items.unique_code = $1`
 		_, err = tx.Exec(ctx, stmt, item.UniqueId, item.Name, item.Size, item.Quantity, item.WarehouseId)
 		if err != nil {
+			err := tx.Rollback(ctx)
+			if err != nil {
+				return fmt.Errorf("transaction already closed. %w", err)
+			}
+
 			return fmt.Errorf("error executing insert item statement. %w", err)
 		}
 	}
@@ -55,11 +60,21 @@ func (r *ItemsRepo) QuantityByWarehouse(ctx context.Context, warehouseId int) (m
 		From("items").
 		Where("warehouse_id = ?", warehouseId).ToSql()
 	if err != nil {
+		err := tx.Rollback(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("transaction already closed. %w", err)
+		}
+
 		return nil, fmt.Errorf("error building query. %w", err)
 	}
 
 	rows, err := tx.Query(ctx, stmt, args...)
 	if err != nil {
+		err := tx.Rollback(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("transaction already closed. %w", err)
+		}
+
 		return nil, fmt.Errorf("error executing query. %w", err)
 	}
 
@@ -69,6 +84,11 @@ func (r *ItemsRepo) QuantityByWarehouse(ctx context.Context, warehouseId int) (m
 
 		err := rows.Scan(&id, &quantity)
 		if err != nil {
+			err := tx.Rollback(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("transaction already closed. %w", err)
+			}
+
 			return nil, fmt.Errorf("error scanning row value. %w", err)
 		}
 

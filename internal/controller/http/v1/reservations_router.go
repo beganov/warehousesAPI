@@ -50,9 +50,13 @@ func (r *reservationsAPIRoutes) reserve(c *gin.Context) {
 	err := r.reservations.Reserve(c.Request.Context(), req.Ids)
 	if errors.Is(err, custom_errors.ErrWarehouseUnavailable) {
 		errorResponse(c, http.StatusForbidden, "warehouse is unavailable")
+
+		return
 	} else if err != nil {
 		r.l.Error(err, "reservation error")
 		errorResponse(c, http.StatusInternalServerError, "reservation error")
+
+		return
 	}
 
 	successResponse(c, http.StatusCreated, "reservation successfully created")
