@@ -39,6 +39,7 @@ type reserveRequest struct {
 // @Produce     json
 // @Param request body reserveRequest true "query params"
 // @Success     201 {object} response
+// @Failure     403 {object} response
 // @Failure     500 {object} response
 // @Router      /reserve [post]
 func (r *reservationsAPIRoutes) reserve(c *gin.Context) {

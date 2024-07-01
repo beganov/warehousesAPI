@@ -141,4 +141,25 @@ curl -X 'GET' \
   "error": ""
 }
 ```
+7. Запрос на резервацию к недопступному складу:
+```
+curl -X 'POST' \
+  'http://localhost:8080/v1/reserve' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "ids": [
+    "F0001"
+  ]
+}'
+```
+**Ответ**:
+```
+{
+  "status": 403,
+  "status_message": "Forbidden",
+  "message": null,
+  "error": "warehouse is unavailable"
+}
+```
 

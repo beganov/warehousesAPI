@@ -139,6 +139,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.response"
                         }
                     },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
