@@ -47,7 +47,7 @@ func (r *ReservationsRepo) CreateReservation(ctx context.Context, ids []string) 
 
 		itemCreateStatement := `INSERT INTO items(unique_code) VALUES ($1) ON CONFLICT DO NOTHING`
 
-		_, err := tx.Exec(ctx, itemCreateStatement, id)
+		_, err = tx.Exec(ctx, itemCreateStatement, id)
 		if err != nil {
 			return fmt.Errorf("error create item. %w", err)
 		}
