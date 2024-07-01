@@ -3,8 +3,8 @@ package repo
 import (
 	"context"
 	"fmt"
-	"warehousesAPI/internal/entity"
-	"warehousesAPI/pkg/postgres"
+	"github.com/robertgarayshin/warehousesAPI/internal/entity"
+	"github.com/robertgarayshin/warehousesAPI/pkg/postgres"
 )
 
 type WarehousesRepo struct {

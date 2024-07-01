@@ -3,13 +3,13 @@ package v1
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/robertgarayshin/warehousesAPI/internal/usecase"
+	"github.com/robertgarayshin/warehousesAPI/pkg/logger"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"warehousesAPI/internal/usecase"
-	"warehousesAPI/pkg/logger"
 
 	// Swagger docs.
-	_ "warehousesAPI/docs"
+	_ "github.com/robertgarayshin/warehousesAPI/docs"
 )
 
 // NewRouter -.

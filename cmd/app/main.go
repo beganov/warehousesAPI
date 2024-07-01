@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/robertgarayshin/warehousesAPI/config"
+	"github.com/robertgarayshin/warehousesAPI/internal/app"
 	"log"
-	"warehousesAPI/config"
-	"warehousesAPI/internal/app"
 )
 
 func main() {

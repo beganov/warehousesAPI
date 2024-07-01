@@ -3,8 +3,8 @@ package repo
 import (
 	"context"
 	"fmt"
-	"warehousesAPI/pkg/custom_errors"
-	"warehousesAPI/pkg/postgres"
+	"github.com/robertgarayshin/warehousesAPI/pkg/custom_errors"
+	"github.com/robertgarayshin/warehousesAPI/pkg/postgres"
 )
 
 type ReservationsRepo struct {

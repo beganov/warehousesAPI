@@ -2,10 +2,10 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/robertgarayshin/warehousesAPI/internal/entity"
+	"github.com/robertgarayshin/warehousesAPI/internal/usecase"
+	"github.com/robertgarayshin/warehousesAPI/pkg/logger"
 	"net/http"
-	"warehousesAPI/internal/entity"
-	"warehousesAPI/internal/usecase"
-	"warehousesAPI/pkg/logger"
 )
 
 type warehousesAPIRoutes struct {

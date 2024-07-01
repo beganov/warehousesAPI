@@ -1,5 +1,5 @@
 FROM golang:latest as modules
-COPY go.mod go.sum /modules/
+COPY go.mod go.sum modules/
 WORKDIR modules
 RUN go mod download
 

@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"warehousesAPI/internal/entity"
+	"github.com/robertgarayshin/warehousesAPI/internal/entity"
 )
 
 type WarehousesUsecase struct {

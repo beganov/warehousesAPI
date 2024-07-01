@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"warehousesAPI/pkg/custom_errors"
+	"github.com/robertgarayshin/warehousesAPI/pkg/custom_errors"
 )
 
 type ReservationsUsecase struct {

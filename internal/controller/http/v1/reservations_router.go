@@ -3,10 +3,10 @@ package v1
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/robertgarayshin/warehousesAPI/internal/usecase"
+	"github.com/robertgarayshin/warehousesAPI/pkg/custom_errors"
+	"github.com/robertgarayshin/warehousesAPI/pkg/logger"
 	"net/http"
-	"warehousesAPI/internal/usecase"
-	"warehousesAPI/pkg/custom_errors"
-	"warehousesAPI/pkg/logger"
 )
 
 type reservationsAPIRoutes struct {

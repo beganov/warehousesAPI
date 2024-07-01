@@ -3,16 +3,16 @@ package app
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/robertgarayshin/warehousesAPI/config"
+	v1 "github.com/robertgarayshin/warehousesAPI/internal/controller/http/v1"
+	"github.com/robertgarayshin/warehousesAPI/internal/usecase"
+	"github.com/robertgarayshin/warehousesAPI/internal/usecase/repo"
+	"github.com/robertgarayshin/warehousesAPI/pkg/httpserver"
+	"github.com/robertgarayshin/warehousesAPI/pkg/logger"
+	"github.com/robertgarayshin/warehousesAPI/pkg/postgres"
 	"os"
 	"os/signal"
 	"syscall"
-	"warehousesAPI/config"
-	v1 "warehousesAPI/internal/controller/http/v1"
-	"warehousesAPI/internal/usecase"
-	"warehousesAPI/internal/usecase/repo"
-	"warehousesAPI/pkg/httpserver"
-	"warehousesAPI/pkg/logger"
-	"warehousesAPI/pkg/postgres"
 )
 
 func Run(cfg *config.Config) {
