@@ -14,12 +14,11 @@ type ReservationsRepo struct {
 func (r *ReservationsRepo) CreateReservation(ctx context.Context, ids []string) error {
 	reservations := r.reservedItemsCount(ids)
 
-	tx, err := r.Pool.Begin(ctx)
-	if err != nil {
-		return fmt.Errorf("error begining transaction. %w", err)
-	}
-
 	for id, count := range reservations {
+		tx, err := r.Pool.Begin(ctx)
+		if err != nil {
+			return fmt.Errorf("error begining transaction. %w", err)
+		}
 		// Запись склада Unstored (id = 0) для товаров, которые создаются при создании резервации
 		/*
 			Usecase: товар добавлен в предварительный резерв, но при этом еще не прибыл на склад.
@@ -31,6 +30,21 @@ func (r *ReservationsRepo) CreateReservation(ctx context.Context, ids []string) 
 				количество товара = текущее количество + количество прибывшего
 			Резервация товара сохраняется, новое количество товара учитывает зарезервированный
 		*/
+		var availability bool
+
+		checkWarehouseStatement := `SELECT w.is_available FROM items 
+   										JOIN warehouses w ON w.id = items.warehouse_id
+										WHERE unique_code = $1`
+		row := tx.QueryRow(ctx, checkWarehouseStatement, id)
+
+		if err := row.Scan(&availability); err != nil {
+			return fmt.Errorf("error checking warehouse availability. %w", err)
+		}
+
+		if !availability {
+			return custom_errors.ErrWarehouseUnavailable
+		}
+
 		itemCreateStatement := `INSERT INTO items(unique_code) VALUES ($1) ON CONFLICT DO NOTHING`
 
 		_, err := tx.Exec(ctx, itemCreateStatement, id)
@@ -47,13 +61,13 @@ func (r *ReservationsRepo) CreateReservation(ctx context.Context, ids []string) 
 		if err != nil {
 			return fmt.Errorf("error executing insert reservation. %w", err)
 		}
-	}
 
-	if err := tx.Commit(ctx); err != nil {
-		if err := tx.Rollback(ctx); err != nil {
-			return fmt.Errorf("transaction already closed. %w", err)
+		if err := tx.Commit(ctx); err != nil {
+			if err := tx.Rollback(ctx); err != nil {
+				return fmt.Errorf("transaction already closed. %w", err)
+			}
+			return fmt.Errorf("error commiting transaction. %w", err)
 		}
-		return fmt.Errorf("error commiting transaction. %w", err)
 	}
 
 	return nil
