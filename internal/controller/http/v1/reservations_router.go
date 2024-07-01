@@ -1,9 +1,11 @@
 package v1
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"warehousesAPI/internal/usecase"
+	"warehousesAPI/pkg/custom_errors"
 	"warehousesAPI/pkg/logger"
 )
 
@@ -29,15 +31,16 @@ type reserveRequest struct {
 	Ids []string `json:"ids"`
 }
 
-// @Summary     Show history
-// @Description Show all translation history
-// @ID          history
-// @Tags  	    translation
+// @Summary     Reserve item
+// @Description Reserve items in warehouse
+// @ID          reserve
+// @Tags  	    reservation
 // @Accept      json
 // @Produce     json
-// @Success     200 {object} historyResponse
+// @Param request body reserveRequest true "query params"
+// @Success     201 {object} response
 // @Failure     500 {object} response
-// @Router      /translation/history [get]
+// @Router      /reserve [post]
 func (r *reservationsAPIRoutes) reserve(c *gin.Context) {
 	var req reserveRequest
 	if err := c.Bind(&req); err != nil {
@@ -48,20 +51,20 @@ func (r *reservationsAPIRoutes) reserve(c *gin.Context) {
 		return
 	}
 
-	//c.JSON(http.StatusOK, historyResponse{translations})
+	successResponse(c, http.StatusCreated, "reservation successfully created")
 }
 
-// @Summary     Translate
-// @Description Translate a text
-// @ID          do-translate
-// @Tags  	    translation
+// @Summary     Delete Item Reservation
+// @Description Reserve items in warehouse
+// @ID          deleteReservation
+// @Tags  	    reservation
 // @Accept      json
 // @Produce     json
-// @Param       request body doTranslateRequest true "Set up translation"
-// @Success     200 {object} entity.Translation
-// @Failure     400 {object} response
+// @Param request body reserveRequest true "query params"
+// @Success     200 {object} int
+// @Failure		403 {object} response
 // @Failure     500 {object} response
-// @Router      /translation/do-translate [post]
+// @Router      /reserve [delete]
 func (r *reservationsAPIRoutes) deleteReservation(c *gin.Context) {
 	var request reserveRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -71,25 +74,17 @@ func (r *reservationsAPIRoutes) deleteReservation(c *gin.Context) {
 		return
 	}
 
-	r.reservations.CancelReservation(c.Request.Context(), request.Ids)
+	err := r.reservations.CancelReservation(c.Request.Context(), request.Ids)
+	if errors.Is(err, custom_errors.ErrNoReservation) {
+		errorResponse(c, http.StatusForbidden, "item have no reservations")
 
-	c.JSON(http.StatusOK, gin.H{})
+		return
+	} else if err != nil {
+		r.l.Error(err, "error canceling reservation")
+		errorResponse(c, http.StatusInternalServerError, "error canceling reservation")
 
-	//
-	//translation, err := r.t.Translate(
-	//	c.Request.Context(),
-	//	entity.Translation{
-	//		Source:      request.Source,
-	//		Destination: request.Destination,
-	//		Original:    request.Original,
-	//	},
-	//)
-	//if err != nil {
-	//	r.l.Error(err, "http - v1 - doTranslate")
-	//	errorResponse(c, http.StatusInternalServerError, "translation service problems")
-	//
-	//	return
-	//}
-	//
-	//c.JSON(http.StatusOK, translation)
+		return
+	}
+
+	successResponse(c, http.StatusOK, "reservation successfully cancelled")
 }

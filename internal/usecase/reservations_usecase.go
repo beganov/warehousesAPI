@@ -2,7 +2,9 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"warehousesAPI/pkg/custom_errors"
 )
 
 type ReservationsUsecase struct {
@@ -18,7 +20,10 @@ func (uc *ReservationsUsecase) Reserve(ctx context.Context, ids []string) error 
 }
 
 func (uc *ReservationsUsecase) CancelReservation(ctx context.Context, ids []string) error {
-	if err := uc.reservationsRepository.DeleteReservation(ctx, ids); err != nil {
+	err := uc.reservationsRepository.DeleteReservation(ctx, ids)
+	if errors.Is(err, custom_errors.ErrNoReservation) {
+		return err
+	} else if err != nil {
 		return fmt.Errorf("error delete reservation. %w", err)
 	}
 

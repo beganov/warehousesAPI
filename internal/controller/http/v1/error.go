@@ -2,12 +2,25 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 type response struct {
-	Error string `json:"error" example:"message"`
+	Status        int         `json:"status"`
+	StatusMessage string      `json:"status_message"`
+	Message       interface{} `json:"message"`
+	Error         string      `json:"error" example:"message"`
 }
 
 func errorResponse(c *gin.Context, code int, msg string) {
-	c.AbortWithStatusJSON(code, response{msg})
+	c.AbortWithStatusJSON(code, response{Status: code,
+		StatusMessage: http.StatusText(code),
+		Error:         msg})
+}
+
+func successResponse(c *gin.Context, code int, msg string) {
+	c.JSON(code, response{
+		Status:        code,
+		StatusMessage: http.StatusText(code),
+		Message:       msg})
 }

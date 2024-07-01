@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"fmt"
+	"warehousesAPI/pkg/custom_errors"
 	"warehousesAPI/pkg/postgres"
 )
 
@@ -67,6 +68,20 @@ func (r *ReservationsRepo) DeleteReservation(ctx context.Context, ids []string) 
 	}
 
 	for id, count := range deleteReservations {
+		var reserved int
+
+		reservationsCheck, args, err := r.Builder.Select("reserved").From("items").Where("unique_code = ?", id).ToSql()
+		if err != nil {
+			return fmt.Errorf("error building statement. %w", err)
+		}
+
+		err = tx.QueryRow(ctx, reservationsCheck, args...).Scan(&reserved)
+		if reserved == 0 {
+			return custom_errors.ErrNoReservation
+		} else if err != nil {
+			return fmt.Errorf("error scanning item reservations. %w", err)
+		}
+
 		reservationDeleteStatement := `UPDATE items
 											SET reserved = reserved - $1,
 											    quantity = quantity + $1
