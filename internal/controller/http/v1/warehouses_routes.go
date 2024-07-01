@@ -2,6 +2,7 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
+	"net/http"
 	"warehousesAPI/internal/entity"
 	"warehousesAPI/internal/usecase"
 	"warehousesAPI/pkg/logger"
@@ -22,14 +23,34 @@ func newWarehousesAPIRoutes(handler *gin.RouterGroup, w usecase.WarehousesUsecas
 
 }
 
+type createWarehouseRequest struct {
+	Warehouse entity.Warehouse `json:"warehouse"`
+}
+
+// @Summary     Create warehouse
+// @Description Create warehouse by provided data
+// @ID          createWarehouse
+// @Tags  	    warehouses
+// @Accept      json
+// @Produce     json
+// @Param 		warehouse 		body 		createWarehouseRequest		true 	"warehouse"
+// @Success     201 			{object} 	response
+// @Failure		400				{object}	response
+// @Failure     500 			{object} 	response
+// @Router      /warehouses		[post]
 func (w *warehousesAPIRoutes) createWarehouse(c *gin.Context) {
-	var wh entity.Warehouse
-	err := c.ShouldBindJSON(&wh)
-	if err != nil {
+	var wh createWarehouseRequest
+	if err := c.ShouldBindJSON(&wh); err != nil {
+		w.l.Error(err, "error binding JSON")
+		errorResponse(c, http.StatusBadRequest, "provided data is invalid")
+	}
+
+	if err := w.warehouses.WarehouseCreate(c.Request.Context(), wh.Warehouse); err != nil {
+		w.l.Error(err, "failed to create warehouse")
+		errorResponse(c, http.StatusInternalServerError, "warehouse service problems")
+
 		return
 	}
 
-	if err := w.warehouses.WarehouseCreate(c.Request.Context(), wh); err != nil {
-		return
-	}
+	successResponse(c, http.StatusCreated, "warehouse created successfully")
 }

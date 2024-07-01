@@ -15,6 +15,98 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/items": {
+            "put": {
+                "description": "Create items in warehouse",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "itmes"
+                ],
+                "summary": "Create items",
+                "operationId": "createItem",
+                "parameters": [
+                    {
+                        "description": "items",
+                        "name": "item",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.itemsCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/items/{warehouse_id}/quantity": {
+            "get": {
+                "description": "Count items in warehouse",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "itmes"
+                ],
+                "summary": "Get items quantity",
+                "operationId": "getItemsQuantity",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "warehouse_id",
+                        "name": "warehouse_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
+                        }
+                    }
+                }
+            }
+        },
         "/reserve": {
             "post": {
                 "description": "Reserve items in warehouse",
@@ -100,9 +192,106 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/warehouses": {
+            "post": {
+                "description": "Create warehouse by provided data",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "warehouses"
+                ],
+                "summary": "Create warehouse",
+                "operationId": "createWarehouse",
+                "parameters": [
+                    {
+                        "description": "warehouse",
+                        "name": "warehouse",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.createWarehouseRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "entity.Item": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "string"
+                },
+                "unique_id": {
+                    "type": "string"
+                },
+                "warehouse_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entity.Warehouse": {
+            "type": "object",
+            "properties": {
+                "availability": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.createWarehouseRequest": {
+            "type": "object",
+            "properties": {
+                "warehouse": {
+                    "$ref": "#/definitions/entity.Warehouse"
+                }
+            }
+        },
+        "v1.itemsCreateRequest": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.Item"
+                    }
+                }
+            }
+        },
         "v1.reserveRequest": {
             "type": "object",
             "properties": {

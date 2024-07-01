@@ -6,21 +6,23 @@ import (
 )
 
 type response struct {
-	Status        int         `json:"status"`
-	StatusMessage string      `json:"status_message"`
-	Message       interface{} `json:"message"`
-	Error         string      `json:"error" example:"message"`
+	Status        int    `json:"status"`
+	StatusMessage string `json:"status_message"`
+	Message       any    `json:"message"`
+	Error         string `json:"error" example:"message"`
 }
 
 func errorResponse(c *gin.Context, code int, msg string) {
 	c.AbortWithStatusJSON(code, response{Status: code,
 		StatusMessage: http.StatusText(code),
-		Error:         msg})
+		Error:         msg,
+	})
 }
 
-func successResponse(c *gin.Context, code int, msg string) {
+func successResponse(c *gin.Context, code int, msg any) {
 	c.JSON(code, response{
 		Status:        code,
 		StatusMessage: http.StatusText(code),
-		Message:       msg})
+		Message:       msg,
+	})
 }
