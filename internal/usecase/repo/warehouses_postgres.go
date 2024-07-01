@@ -1,0 +1,46 @@
+package repo
+
+import (
+	"context"
+	"fmt"
+	"warehousesAPI/internal/entity"
+	"warehousesAPI/pkg/postgres"
+)
+
+type WarehousesRepo struct {
+	*postgres.Postgres
+}
+
+func (r *WarehousesRepo) CreateWarehouse(ctx context.Context, warehouse entity.Warehouse) error {
+	tx, err := r.Pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("error starting transaction. %w", err)
+	}
+
+	stmt, args, err := r.Builder.Insert("warehouses").
+		Columns("name", "is_available").
+		Values(warehouse.Name, warehouse.Availability).ToSql()
+	if err != nil {
+		return fmt.Errorf("error creating statement. %w", err)
+	}
+
+	_, err = tx.Exec(ctx, stmt, args...)
+	if err != nil {
+		return fmt.Errorf("error creating warehouse. %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		if err := tx.Rollback(ctx); err != nil {
+			return fmt.Errorf("transaction already closed. %w", err)
+		}
+
+		return fmt.Errorf("error commiting transaction. %w", err)
+	}
+
+	return nil
+
+}
+
+func NewWarehousesRepo(p *postgres.Postgres) *WarehousesRepo {
+	return &WarehousesRepo{p}
+}
