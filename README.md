@@ -3,6 +3,9 @@
 
 Для запуска проекта:  
 ```
+git clone https://github.com/robertgarayshin/warehousesAPI.git && cd warehousesAPI
+```
+```
 make up
 ```
 Команда запускает БД PostgreSQL и приложение в Docker-контейнерах, применяет миграции и наполняет БД тестовыми данными.  
