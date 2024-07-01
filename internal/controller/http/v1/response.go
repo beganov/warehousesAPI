@@ -1,10 +1,12 @@
 package v1
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
+// response - тип ответа от API.
 type response struct {
 	Status        int    `json:"status"`
 	StatusMessage string `json:"status_message"`
@@ -12,6 +14,7 @@ type response struct {
 	Error         string `json:"error" example:"message"`
 }
 
+// errorResponse - возвращает ответ при наличии ошибки.
 func errorResponse(c *gin.Context, code int, msg string) {
 	c.AbortWithStatusJSON(code, response{Status: code,
 		StatusMessage: http.StatusText(code),
@@ -19,6 +22,7 @@ func errorResponse(c *gin.Context, code int, msg string) {
 	})
 }
 
+// successResponse - возварт успешного ответа от сервера.
 func successResponse(c *gin.Context, code int, msg any) {
 	c.JSON(code, response{
 		Status:        code,

@@ -8,11 +8,11 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	// Swagger docs.
+	// Документация Swagger.
 	_ "github.com/robertgarayshin/warehousesAPI/docs"
 )
 
-// NewRouter -.
+// NewRouter - метод создания нового роутера.
 // Swagger spec:
 // @title       Lamoda Warehouses API
 // @description Junior Go Backend test task
@@ -26,18 +26,16 @@ func NewRouter(
 	r usecase.ReservationsUsecase,
 	w usecase.WarehousesUsecase,
 ) {
-	// Options
+	// Опции хэндлера запросов
 	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())
 
-	// Swagger
-	//swaggerHandler := ginSwagger.DisablingWrapHandler(swaggerFiles.Handler, "DISABLE_SWAGGER_HTTP_HANDLER")
-	//handler.GET("/swagger/*any", swaggerHandler)
 	handler.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	// Prometheus metrics
+
+	// Prometheus метрики сервера
 	handler.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
-	// Routers
+	// Создание роутеров для API
 	h := handler.Group("/v1")
 	{
 		newWarehousesAPIRoutes(h, w, l)

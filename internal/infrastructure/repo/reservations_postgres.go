@@ -3,7 +3,8 @@ package repo
 import (
 	"context"
 	"fmt"
-	"github.com/robertgarayshin/warehousesAPI/pkg/custom_errors"
+
+	"github.com/robertgarayshin/warehousesAPI/pkg/customerrors"
 	"github.com/robertgarayshin/warehousesAPI/pkg/postgres"
 )
 
@@ -36,8 +37,8 @@ func (r *ReservationsRepo) CreateReservation(ctx context.Context, ids []string) 
 
 		_, err = tx.Exec(ctx, itemCreateStatement, id)
 		if err != nil {
-			if err := tx.Rollback(ctx); err != nil {
-				return fmt.Errorf("transaction already closed. %w", err)
+			if rollbackError := tx.Rollback(ctx); rollbackError != nil {
+				return fmt.Errorf("transaction already closed. %w", rollbackError)
 			}
 
 			return fmt.Errorf("error create item. %w", err)
@@ -48,20 +49,20 @@ func (r *ReservationsRepo) CreateReservation(ctx context.Context, ids []string) 
 										WHERE unique_code = $1`
 		row := tx.QueryRow(ctx, checkWarehouseStatement, id)
 
-		if err := row.Scan(&availability); err != nil {
-			if err := tx.Rollback(ctx); err != nil {
-				return fmt.Errorf("transaction already closed. %w", err)
+		if err = row.Scan(&availability); err != nil {
+			if rollbackError := tx.Rollback(ctx); rollbackError != nil {
+				return fmt.Errorf("transaction already closed. %w", rollbackError)
 			}
 
 			return fmt.Errorf("error checking warehouse availability. %w", err)
 		}
 
 		if !availability {
-			if err := tx.Rollback(ctx); err != nil {
-				return fmt.Errorf("transaction already closed. %w", err)
+			if rollbackError := tx.Rollback(ctx); rollbackError != nil {
+				return fmt.Errorf("transaction already closed. %w", rollbackError)
 			}
 
-			return custom_errors.ErrWarehouseUnavailable
+			return customerrors.ErrWarehouseUnavailable
 		}
 
 		reservationCreateStatement := `UPDATE items 
@@ -71,16 +72,16 @@ func (r *ReservationsRepo) CreateReservation(ctx context.Context, ids []string) 
 
 		_, err = tx.Exec(ctx, reservationCreateStatement, count, id)
 		if err != nil {
-			if err := tx.Rollback(ctx); err != nil {
-				return fmt.Errorf("transaction already closed. %w", err)
+			if rollbackError := tx.Rollback(ctx); rollbackError != nil {
+				return fmt.Errorf("transaction already closed. %w", rollbackError)
 			}
 
 			return fmt.Errorf("error executing insert reservation. %w", err)
 		}
 
-		if err := tx.Commit(ctx); err != nil {
-			if err := tx.Rollback(ctx); err != nil {
-				return fmt.Errorf("transaction already closed. %w", err)
+		if err = tx.Commit(ctx); err != nil {
+			if rollbackError := tx.Rollback(ctx); rollbackError != nil {
+				return fmt.Errorf("transaction already closed. %w", rollbackError)
 			}
 
 			return fmt.Errorf("error commiting transaction. %w", err)
@@ -107,26 +108,28 @@ func (r *ReservationsRepo) DeleteReservation(ctx context.Context, ids []string) 
 										WHERE unique_code = $1`
 		row := tx.QueryRow(ctx, checkWarehouseStatement, id)
 
-		if err := row.Scan(&availability); err != nil {
-			if err := tx.Rollback(ctx); err != nil {
-				return fmt.Errorf("transaction already closed. %w", err)
+		if err = row.Scan(&availability); err != nil {
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				return fmt.Errorf("transaction already closed. %w", rollbackErr)
 			}
 
 			return fmt.Errorf("error checking warehouse availability. %w", err)
 		}
 
 		if !availability {
-			if err := tx.Rollback(ctx); err != nil {
-				return fmt.Errorf("transaction already closed. %w", err)
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				return fmt.Errorf("transaction already closed. %w", rollbackErr)
 			}
 
-			return custom_errors.ErrWarehouseUnavailable
+			return customerrors.ErrWarehouseUnavailable
 		}
 
-		reservationsCheck, args, err := r.Builder.Select("reserved").From("items").Where("unique_code = ?", id).ToSql()
+		reservationsCheck, args, err := r.Builder.Select("reserved").
+			From("items").Where("unique_code = ?", id).
+			ToSql()
 		if err != nil {
-			if err := tx.Rollback(ctx); err != nil {
-				return fmt.Errorf("transaction already closed. %w", err)
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				return fmt.Errorf("transaction already closed. %w", rollbackErr)
 			}
 
 			return fmt.Errorf("error building statement. %w", err)
@@ -134,14 +137,14 @@ func (r *ReservationsRepo) DeleteReservation(ctx context.Context, ids []string) 
 
 		err = tx.QueryRow(ctx, reservationsCheck, args...).Scan(&reserved)
 		if reserved == 0 {
-			if err := tx.Rollback(ctx); err != nil {
-				return fmt.Errorf("transaction already closed. %w", err)
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				return fmt.Errorf("transaction already closed. %w", rollbackErr)
 			}
 
-			return custom_errors.ErrNoReservation
+			return customerrors.ErrNoReservation
 		} else if err != nil {
-			if err := tx.Rollback(ctx); err != nil {
-				return fmt.Errorf("transaction already closed. %w", err)
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				return fmt.Errorf("transaction already closed. %w", rollbackErr)
 			}
 
 			return fmt.Errorf("error scanning item reservations. %w", err)
@@ -154,16 +157,16 @@ func (r *ReservationsRepo) DeleteReservation(ctx context.Context, ids []string) 
 
 		_, err = tx.Exec(ctx, reservationDeleteStatement, count, id)
 		if err != nil {
-			if err := tx.Rollback(ctx); err != nil {
-				return fmt.Errorf("transaction already closed. %w", err)
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				return fmt.Errorf("transaction already closed. %w", rollbackErr)
 			}
 
 			return fmt.Errorf("error delete reservation. %w", err)
 		}
 
-		if err := tx.Commit(ctx); err != nil {
-			if err := tx.Rollback(ctx); err != nil {
-				return fmt.Errorf("transaction already closed. %w", err)
+		if err = tx.Commit(ctx); err != nil {
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				return fmt.Errorf("transaction already closed. %w", rollbackErr)
 			}
 
 			return fmt.Errorf("error commiting transaction. %w", err)
@@ -177,7 +180,7 @@ func (r *ReservationsRepo) reservedItemsCount(ids []string) map[string]int {
 	res := make(map[string]int, len(ids))
 
 	for _, id := range ids {
-		res[id] += 1
+		res[id]++
 	}
 
 	return res

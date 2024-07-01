@@ -1,9 +1,10 @@
 package main
 
 import (
+	"log"
+
 	"github.com/robertgarayshin/warehousesAPI/config"
 	"github.com/robertgarayshin/warehousesAPI/internal/app"
-	"log"
 )
 
 func main() {

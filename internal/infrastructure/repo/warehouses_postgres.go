@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"fmt"
+
 	"github.com/robertgarayshin/warehousesAPI/internal/entity"
 	"github.com/robertgarayshin/warehousesAPI/pkg/postgres"
 )
@@ -21,8 +22,8 @@ func (r *WarehousesRepo) CreateWarehouse(ctx context.Context, warehouse entity.W
 		Columns("name", "is_available").
 		Values(warehouse.Name, warehouse.Availability).ToSql()
 	if err != nil {
-		if err := tx.Rollback(ctx); err != nil {
-			return fmt.Errorf("transaction already closed. %w", err)
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+			return fmt.Errorf("transaction already closed. %w", rollbackErr)
 		}
 
 		return fmt.Errorf("error creating statement. %w", err)
@@ -30,23 +31,22 @@ func (r *WarehousesRepo) CreateWarehouse(ctx context.Context, warehouse entity.W
 
 	_, err = tx.Exec(ctx, stmt, args...)
 	if err != nil {
-		if err := tx.Rollback(ctx); err != nil {
-			return fmt.Errorf("transaction already closed. %w", err)
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+			return fmt.Errorf("transaction already closed. %w", rollbackErr)
 		}
 
 		return fmt.Errorf("error creating warehouse. %w", err)
 	}
 
-	if err := tx.Commit(ctx); err != nil {
-		if err := tx.Rollback(ctx); err != nil {
-			return fmt.Errorf("transaction already closed. %w", err)
+	if err = tx.Commit(ctx); err != nil {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+			return fmt.Errorf("transaction already closed. %w", rollbackErr)
 		}
 
 		return fmt.Errorf("error commiting transaction. %w", err)
 	}
 
 	return nil
-
 }
 
 func NewWarehousesRepo(p *postgres.Postgres) *WarehousesRepo {

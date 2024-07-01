@@ -4,17 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/robertgarayshin/warehousesAPI/pkg/custom_errors"
+
+	"github.com/robertgarayshin/warehousesAPI/pkg/customerrors"
 )
 
+// ReservationsUsecase - usecase реализующий интерфейс работы с резервациями.
 type ReservationsUsecase struct {
 	reservationsRepository ReservationsRepo
 }
 
+// Reserve - метод для создания резерва товара. На вход принимает слайс уникальных кодов товара.
 func (uc *ReservationsUsecase) Reserve(ctx context.Context, ids []string) error {
 	err := uc.reservationsRepository.CreateReservation(ctx, ids)
-	if errors.Is(err, custom_errors.ErrWarehouseUnavailable) {
-		return custom_errors.ErrWarehouseUnavailable
+	if errors.Is(err, customerrors.ErrWarehouseUnavailable) {
+		return customerrors.ErrWarehouseUnavailable
 	} else if err != nil {
 		return fmt.Errorf("error create reservation. %w", err)
 	}
@@ -22,9 +25,10 @@ func (uc *ReservationsUsecase) Reserve(ctx context.Context, ids []string) error 
 	return nil
 }
 
+// CancelReservation - метод для удаления резервации. На вход принимает слайс уникальных кодов товара.
 func (uc *ReservationsUsecase) CancelReservation(ctx context.Context, ids []string) error {
 	err := uc.reservationsRepository.DeleteReservation(ctx, ids)
-	if errors.Is(err, custom_errors.ErrNoReservation) {
+	if errors.Is(err, customerrors.ErrNoReservation) {
 		return err
 	} else if err != nil {
 		return fmt.Errorf("error delete reservation. %w", err)

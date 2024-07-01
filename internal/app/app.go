@@ -2,17 +2,18 @@ package app
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/robertgarayshin/warehousesAPI/config"
-	v1 "github.com/robertgarayshin/warehousesAPI/internal/controller/http/v1"
-	"github.com/robertgarayshin/warehousesAPI/internal/usecase"
-	"github.com/robertgarayshin/warehousesAPI/internal/usecase/repo"
-	"github.com/robertgarayshin/warehousesAPI/pkg/httpserver"
-	"github.com/robertgarayshin/warehousesAPI/pkg/logger"
-	"github.com/robertgarayshin/warehousesAPI/pkg/postgres"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/gin-gonic/gin"
+	"github.com/robertgarayshin/warehousesAPI/config"
+	v1 "github.com/robertgarayshin/warehousesAPI/internal/controller/http/v1"
+	repo2 "github.com/robertgarayshin/warehousesAPI/internal/infrastructure/repo"
+	"github.com/robertgarayshin/warehousesAPI/internal/usecase"
+	"github.com/robertgarayshin/warehousesAPI/pkg/httpserver"
+	"github.com/robertgarayshin/warehousesAPI/pkg/logger"
+	"github.com/robertgarayshin/warehousesAPI/pkg/postgres"
 )
 
 func Run(cfg *config.Config) {
@@ -21,21 +22,21 @@ func Run(cfg *config.Config) {
 	// Repository
 	pg, err := postgres.New(cfg.PG.URL, postgres.MaxPoolSize(cfg.PG.PoolMax))
 	if err != nil {
-		l.Fatal(fmt.Errorf("app - Run - postgres.NewItemsRepository: %w", err))
+		l.Fatal(fmt.Errorf("error creating postgres repository. %w", err))
 	}
 	defer pg.Close()
 
 	// Use case
 	itemsUsecase := usecase.NewItemsUsecase(
-		repo.NewItemsRepository(pg),
+		repo2.NewItemsRepository(pg),
 	)
 
 	reservationsUsecase := usecase.NewReservationsUsecase(
-		repo.NewReservationRepo(pg),
+		repo2.NewReservationRepo(pg),
 	)
 
 	warehousesUsecase := usecase.NewWarehousesUsecase(
-		repo.NewWarehousesRepo(pg),
+		repo2.NewWarehousesRepo(pg),
 	)
 
 	// HTTP Server
@@ -54,14 +55,14 @@ func Run(cfg *config.Config) {
 
 	select {
 	case s := <-interrupt:
-		l.Info("app - Run - signal: " + s.String())
+		l.Info("signal: " + s.String())
 	case err = <-httpServer.Notify():
-		l.Error(fmt.Errorf("app - Run - httpServer.Notify: %w", err))
+		l.Error(fmt.Errorf("app server notify: %w", err))
 	}
 
 	// Shutdown
 	err = httpServer.Shutdown()
 	if err != nil {
-		l.Error(fmt.Errorf("app - Run - httpServer.Shutdown: %w", err))
+		l.Error(fmt.Errorf("app server shutdown: %w", err))
 	}
 }

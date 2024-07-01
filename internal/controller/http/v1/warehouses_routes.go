@@ -1,11 +1,12 @@
 package v1
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/robertgarayshin/warehousesAPI/internal/entity"
 	"github.com/robertgarayshin/warehousesAPI/internal/usecase"
 	"github.com/robertgarayshin/warehousesAPI/pkg/logger"
-	"net/http"
 )
 
 type warehousesAPIRoutes struct {
@@ -20,7 +21,6 @@ func newWarehousesAPIRoutes(handler *gin.RouterGroup, w usecase.WarehousesUsecas
 	{
 		h.POST("/", r.createWarehouse)
 	}
-
 }
 
 type createWarehouseRequest struct {

@@ -2,11 +2,12 @@ package v1
 
 import (
 	"errors"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/robertgarayshin/warehousesAPI/internal/usecase"
-	"github.com/robertgarayshin/warehousesAPI/pkg/custom_errors"
+	"github.com/robertgarayshin/warehousesAPI/pkg/customerrors"
 	"github.com/robertgarayshin/warehousesAPI/pkg/logger"
-	"net/http"
 )
 
 type reservationsAPIRoutes struct {
@@ -28,7 +29,7 @@ func newReservationsAPIRoutes(handler *gin.RouterGroup, r usecase.ReservationsUs
 }
 
 type reserveRequest struct {
-	Ids []string `json:"ids"`
+	IDs []string `json:"ids"`
 }
 
 // @Summary     Reserve item
@@ -48,8 +49,8 @@ func (r *reservationsAPIRoutes) reserve(c *gin.Context) {
 		return
 	}
 
-	err := r.reservations.Reserve(c.Request.Context(), req.Ids)
-	if errors.Is(err, custom_errors.ErrWarehouseUnavailable) {
+	err := r.reservations.Reserve(c.Request.Context(), req.IDs)
+	if errors.Is(err, customerrors.ErrWarehouseUnavailable) {
 		errorResponse(c, http.StatusForbidden, "warehouse is unavailable")
 
 		return
@@ -70,21 +71,22 @@ func (r *reservationsAPIRoutes) reserve(c *gin.Context) {
 // @Accept      json
 // @Produce     json
 // @Param request body reserveRequest true "query params"
-// @Success     200 {object} int
+// @Success     200 {object} response
 // @Failure		403 {object} response
 // @Failure     500 {object} response
 // @Router      /reserve [delete]
 func (r *reservationsAPIRoutes) deleteReservation(c *gin.Context) {
 	var request reserveRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		r.l.Error(err, "http - v1 - doTranslate")
+		r.l.Error(err, "error binging delete reservation request")
 		errorResponse(c, http.StatusBadRequest, "invalid request body")
 
 		return
 	}
 
-	err := r.reservations.CancelReservation(c.Request.Context(), request.Ids)
-	if errors.Is(err, custom_errors.ErrNoReservation) {
+	err := r.reservations.CancelReservation(c.Request.Context(), request.IDs)
+	if errors.Is(err, customerrors.ErrNoReservation) {
+		r.l.Error(err, "item have no reservations")
 		errorResponse(c, http.StatusForbidden, "item have no reservations")
 
 		return

@@ -1,12 +1,15 @@
 package v1
 
 import (
+	"errors"
+	"github.com/robertgarayshin/warehousesAPI/pkg/customerrors"
+	"net/http"
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 	"github.com/robertgarayshin/warehousesAPI/internal/entity"
 	"github.com/robertgarayshin/warehousesAPI/internal/usecase"
 	"github.com/robertgarayshin/warehousesAPI/pkg/logger"
-	"net/http"
-	"strconv"
 )
 
 type itemsAPIRouter struct {
@@ -71,6 +74,7 @@ type itemsCreateRequest struct {
 // @Param 		item	 		body 		itemsCreateRequest		true 	"items"
 // @Success     201 			{object} 	response
 // @Failure		400				{object}	response
+// @Failure		404				{object}	response
 // @Failure     500 			{object} 	response
 // @Router      /items 			[put]
 func (r *itemsAPIRouter) createItems(c *gin.Context) {
@@ -81,8 +85,13 @@ func (r *itemsAPIRouter) createItems(c *gin.Context) {
 
 		return
 	}
+	err := r.items.CreateItems(c.Request.Context(), itemsReq.Items)
+	if errors.Is(err, customerrors.ErrNoWarehouse) {
+		r.l.Error(err, "warehouse is not exist")
+		errorResponse(c, http.StatusNotFound, "warehouse is not exist")
 
-	if err := r.items.CreateItems(c.Request.Context(), itemsReq.Items); err != nil {
+		return
+	} else if err != nil {
 		r.l.Error(err, "failed to create item")
 		errorResponse(c, http.StatusInternalServerError, "items service problems")
 

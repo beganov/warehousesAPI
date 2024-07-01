@@ -1,4 +1,3 @@
-// Package usecase implements application business logic. Each logic group in own file.
 package usecase
 
 import (
@@ -22,6 +21,7 @@ type (
 		CancelReservation(context.Context, []string) error
 	}
 
+	// Warehouse - интерфейс сервиса складов. Позволяет создавать склады для товаров.
 	Warehouse interface {
 		WarehouseCreate(ctx context.Context, warehouse entity.Warehouse) error
 	}
