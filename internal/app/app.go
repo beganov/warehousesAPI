@@ -16,7 +16,7 @@ import (
 	"github.com/robertgarayshin/warehousesAPI/pkg/postgres"
 )
 
-// Comment for Denis
+// Comment for TRPO
 func Run(cfg *config.Config) {
 	l := logger.New(cfg.Log.Level)
 
